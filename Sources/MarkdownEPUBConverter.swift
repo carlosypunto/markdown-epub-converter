@@ -62,12 +62,13 @@ struct MarkdownEPUBConverter: ParsableCommand {
             }
         }
 
-        let imagesDirectory = resultDirectory.appending(path: "images")
+        let imagesPath = "images"
+        let imagesDirectory = resultDirectory.appending(path: imagesPath)
         try filemanager.createDirectory(atPath: imagesDirectory.path, withIntermediateDirectories: true)
 
-        let extractor = try EPUBExtractor(url: epubURL)
+        let extractor = try Extractor(url: epubURL)
         try extractor.copyImages(to: imagesDirectory)
-        try extractor.extract(in: resultDirectory)
+        try extractor.extract(in: resultDirectory, withImagesPath: imagesPath)
     }
 }
 

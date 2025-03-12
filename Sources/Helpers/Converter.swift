@@ -2,6 +2,13 @@ import SwiftSoup
 import Foundation
 
 final class Converter {
+    private let imagesPath: String
+    private let fileManager = FileManager.default
+
+    init(imagesPath: String) {
+        self.imagesPath = imagesPath
+    }
+
     func convertToMarkdown(html: String) throws -> String {
         let document = try SwiftSoup.parse(html)
         return try parseElement(document.body())
@@ -54,8 +61,9 @@ final class Converter {
         case "br": return "\n"
         case "img":
             let src = try element.attr("src")
+            let newSrc = processImageSrc(src)
             let alt = try element.attr("alt")
-            return "![\(alt)](\(src))\n\n"
+            return "![\(alt)](\(newSrc))\n\n"
         default: return try parseElement(element)
         }
     }
@@ -68,5 +76,10 @@ final class Converter {
             markdown.append(prefix + (try parseElement(li)) + "\n")
         }
         return markdown + "\n"
+    }
+
+    private func processImageSrc(_ imageSrc: String) -> String {
+        let url = URL(fileURLWithPath: imageSrc)
+        return imagesPath + "/" + url.lastPathComponent
     }
 }

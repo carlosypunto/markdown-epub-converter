@@ -8,7 +8,7 @@ enum ExtractorError: Error {
 }
 
 @available(macOS 13.0, *)
-final class EPUBExtractor {
+final class Extractor {
     let archive: Archive
 
     init(url: URL) throws {
@@ -35,7 +35,8 @@ final class EPUBExtractor {
         }
     }
 
-    func extract(in resultDir: URL) throws {
+    func extract(in resultDir: URL, withImagesPath imagesPath: String) throws {
+        let converter = Converter(imagesPath: imagesPath)
         let htmlEntries = archive
             .filter {
                 $0.path.lowercased().hasSuffix(".xhtml") || $0.path.lowercased().hasSuffix(".html")
@@ -44,7 +45,7 @@ final class EPUBExtractor {
         for entry in htmlEntries {
             let filename = entry.filename + ".md"
             let htmlString = try extractHtmlOfEntry(entry)
-            let markdown = try extractMarkdowOf(htmlString: htmlString)
+            let markdown = try extractMarkdowOf(htmlString: htmlString, converter: converter)
             try write(markdown: markdown, withName: filename, in: resultDir)
         }
     }
@@ -66,9 +67,9 @@ final class EPUBExtractor {
         return htmlString
     }
 
-    private func extractMarkdowOf(htmlString: String) throws -> String {
+    private func extractMarkdowOf(htmlString: String, converter: Converter) throws -> String {
         do {
-            return try Converter().convertToMarkdown(html: htmlString)
+            return try converter.convertToMarkdown(html: htmlString)
         } catch {
             throw ExtractorError.extractingDocument
         }
