@@ -1,11 +1,6 @@
 import Foundation
 import ZIPFoundation
 
-struct HtmlFile {
-    let name: String
-    let source: String
-}
-
 enum ExtractorError: Error {
     case extractingDocument
     case extractingMarkdow

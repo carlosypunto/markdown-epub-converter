@@ -13,8 +13,12 @@ struct MarkdownEPUBConverter: ParsableCommand {
 
     @Argument(
         help: """
-              The path to result of conversion. In that path a directory will be \
-              created with the same name as the Epub without the .epub extension
+              If this path is not supplied, the same path as the .epub file \
+              will be used.
+              The path to result of conversion. If there is no directory in \
+              the path provided, the program will close.
+              Into the directory of that path a directory will be created with \
+              the same name as the Epub without the .epub extension.
               """,
         transform: URL.init(fileURLWithPath:)
     )
