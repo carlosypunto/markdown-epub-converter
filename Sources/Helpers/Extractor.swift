@@ -43,11 +43,25 @@ final class Extractor {
             }
 
         for entry in htmlEntries {
-            let filename = entry.filename + ".md"
+            let entryFilename = entry.filename
             let htmlString = try extractHtmlOfEntry(entry)
-            let markdown = try extractMarkdowOf(htmlString: htmlString, converter: converter)
+
+            guard
+                let converterResult = try extractMarkdowOf(htmlString: htmlString, converter: converter)
+            else {
+                throw ExtractorError.extractingDocument
+            }
+
+            let filename = generateFilename(filename: entryFilename, title: converterResult.title)
+            let markdown = converterResult.markdown
             try write(markdown: markdown, withName: filename, in: resultDir)
         }
+    }
+
+    private func generateFilename(filename: String, title: String?) -> String {
+        guard let title else { return "\(filename).md" }
+        let cleanedTitle = title.replacingOccurrences(of: ":", with: "-").replacingOccurrences(of: " ", with: "_")
+        return "\(cleanedTitle).md"
     }
 
     private func write(markdown: String, withName name: String, in resultDir: URL) throws {
@@ -67,7 +81,7 @@ final class Extractor {
         return htmlString
     }
 
-    private func extractMarkdowOf(htmlString: String, converter: Converter) throws -> String {
+    private func extractMarkdowOf(htmlString: String, converter: Converter) throws -> ConverterResult? {
         do {
             return try converter.convertToMarkdown(html: htmlString)
         } catch {

@@ -1,6 +1,11 @@
 import SwiftSoup
 import Foundation
 
+struct ConverterResult {
+    let title: String?
+    let markdown: String
+}
+
 final class Converter {
     private let imagesPath: String
     private let fileManager = FileManager.default
@@ -9,14 +14,20 @@ final class Converter {
         self.imagesPath = imagesPath
     }
 
-    func convertToMarkdown(html: String) throws -> String {
+    func convertToMarkdown(html: String) throws -> ConverterResult? {
         let document = try SwiftSoup.parse(html)
-        return try parseElement(document.body())
+        guard let body = document.body() else { return nil }
+        let markdown = try parseElement(body)
+        let title = try parseTitle(body)
+        return ConverterResult(title: title, markdown: markdown)
     }
 
-    private func parseElement(_ element: Element?) throws -> String {
-        guard let element = element else { return "" }
+    private func parseTitle(_ element: Element) throws -> String? {
+        guard let firstH1 = try? element.select("h1").first() else { return nil }
+        return try? firstH1.text()
+    }
 
+    private func parseElement(_ element: Element) throws -> String {
         var markdown = ""
 
         for node in element.getChildNodes() {
