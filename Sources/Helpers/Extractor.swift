@@ -77,7 +77,8 @@ final class Extractor {
     private func extractHtmlOfEntry(_ entry: Entry) throws -> String {
         var htmlData = Data()
         _ = try archive.extract(entry, consumer: { htmlData.append($0) })
-        guard let htmlString = String(data: htmlData, encoding: .utf8) else { throw ExtractorError.extractingDocument }
+        let htmlString = String(decoding: htmlData, as: UTF8.self)
+        guard !htmlString.isEmpty else { throw ExtractorError.extractingDocument }
         return htmlString
     }
 
