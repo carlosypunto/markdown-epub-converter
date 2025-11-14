@@ -24,6 +24,9 @@ struct MarkdownEPUBConverter: ParsableCommand {
     )
     var destination: URL?
 
+    @Flag(help: "Prepare the output for import in Notion.")
+    var forNotion = false
+
     private var resultDirectory: URL!
 
     mutating func validate() throws {
@@ -62,13 +65,14 @@ struct MarkdownEPUBConverter: ParsableCommand {
             }
         }
 
-        let imagesPath = "images"
-        let imagesDirectory = resultDirectory.appending(path: imagesPath)
-        try filemanager.createDirectory(atPath: imagesDirectory.path, withIntermediateDirectories: true)
+        let imagesDirectoryName = "images"
+        let imagesDirectory = resultDirectory.appending(path: imagesDirectoryName)
+        let imagesPath = forNotion ? resultDirectory.path : imagesDirectory.path
+        try filemanager.createDirectory(atPath: imagesPath, withIntermediateDirectories: true)
 
-        let extractor = try Extractor(url: epubURL)
-        try extractor.copyImages(to: imagesDirectory)
-        try extractor.extract(in: resultDirectory, withImagesPath: imagesPath)
+        let extractor = try Extractor(url: epubURL, keepSpacesInName: forNotion)
+        try extractor.copyImages(to: forNotion ? resultDirectory : imagesDirectory)
+        try extractor.extract(in: resultDirectory, withImagesPath: forNotion ? "." : imagesDirectoryName)
     }
 }
 

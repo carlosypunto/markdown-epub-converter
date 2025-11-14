@@ -10,9 +10,11 @@ enum ExtractorError: Error {
 @available(macOS 13.0, *)
 final class Extractor {
     let archive: Archive
+    let keepSpacesInName: Bool
 
-    init(url: URL) throws {
+    init(url: URL, keepSpacesInName: Bool) throws {
         archive = try Archive(url: url, accessMode: .read, pathEncoding: nil)
+        self.keepSpacesInName = keepSpacesInName
     }
 
     func copyImages(to imagesDir: URL) throws {
@@ -60,8 +62,9 @@ final class Extractor {
 
     private func generateFilename(filename: String, title: String?) -> String {
         guard let title else { return "\(filename).md" }
-        let cleanedTitle = title.replacingOccurrences(of: ":", with: "-").replacingOccurrences(of: " ", with: "_")
-        return "\(cleanedTitle).md"
+        let cleanedTitle = title.replacingOccurrences(of: ":", with: "-")
+        let withoutSpaces = cleanedTitle.replacingOccurrences(of: " ", with: "_")
+        return "\(keepSpacesInName ? cleanedTitle : withoutSpaces).md"
     }
 
     private func write(markdown: String, withName name: String, in resultDir: URL) throws {
