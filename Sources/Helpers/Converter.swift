@@ -1,5 +1,6 @@
 import SwiftSoup
 import Foundation
+ import SwiftFormat
 
 struct ConverterResult {
     let title: String?
@@ -9,9 +10,17 @@ struct ConverterResult {
 final class Converter {
     private let imagesPath: String
     private let fileManager = FileManager.default
+    private let swiftFormatter: SwiftFormatter
+
+    let customConfiguration: Configuration = {
+        var configuration = Configuration()
+        configuration.tabWidth = 4
+        return configuration
+    }()
 
     init(imagesPath: String) {
         self.imagesPath = imagesPath
+        swiftFormatter = SwiftFormatter(configuration: customConfiguration)
     }
 
     func convertToMarkdown(html: String) throws -> ConverterResult? {
@@ -67,7 +76,7 @@ final class Converter {
             let href = try element.attr("href")
             return "[" + (try parseElement(element)) + "](\(href))"
         case "code": return "`" + (try parseElement(element)) + "`"
-        case "pre": return "\n```\n" + (try element.text()) + "\n```\n\n"
+        case "pre": return try formatPreElement(element)
         case "blockquote": return "> " + (try parseElement(element)).replacingOccurrences(of: "\n", with: "\n> ") + "\n\n"
         case "br": return "\n"
         case "img":
@@ -92,5 +101,23 @@ final class Converter {
     private func processImageSrc(_ imageSrc: String) -> String {
         let url = URL(fileURLWithPath: imageSrc)
         return imagesPath + "/" + url.lastPathComponent
+    }
+
+    private func formatPreElement(_ element: Element) throws -> String {
+        let text = try element.text()
+        var stringStream = StringStream()
+        do {
+            try swiftFormatter.format(source: text, assumingFileURL: nil, selection: .infinite, to: &stringStream)
+            return "\n```swift\n" + stringStream.string + "\n```\n\n"
+        } catch {
+            return "\n```\n" + text + "\n```\n\n"
+        }
+    }
+}
+
+private struct StringStream: TextOutputStream {
+    var string = ""
+    mutating func write(_ string: String) {
+        self.string = string
     }
 }
